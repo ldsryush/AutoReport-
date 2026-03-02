@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AutoReport MVP</title>
+  <style>
+    :root { font-family: Segoe UI, Arial, sans-serif; }
+    body { margin: 0; padding: 24px; background: #f5f7fb; color: #1f2937; }
+    .container { max-width: 980px; margin: 0 auto; }
+    h1 { margin: 0 0 16px; }
+    .card { background: white; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; }
+    input, select, textarea, button { padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
+    textarea { width: 100%; min-height: 88px; }
+    button { cursor: pointer; background: #111827; color: #fff; border: none; }
+    button.secondary { background: #374151; }
+    pre { background: #0f172a; color: #e2e8f0; padding: 12px; border-radius: 8px; overflow: auto; }
+    .muted { color: #6b7280; font-size: 13px; }
+    label { font-size: 13px; color: #374151; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>AutoReport MVP</h1>
+    <p class="muted">Run mock reports, explain results, and draft SQL from one page.</p>
+
+    <div class="card">
+      <h3>1) Run Report</h3>
+      <div class="row">
+        <select id="reportSelect"></select>
+        <input id="limitInput" type="number" value="5" min="1" />
+        <button id="runBtn">Run</button>
+      </div>
+      <p class="muted">Uses mock data by default.</p>
+      <pre id="reportOutput">No data yet.</pre>
+    </div>
+
+    <div class="card">
+      <h3>2) Explain Report</h3>
+      <label for="goalInput">Goal</label>
+      <textarea id="goalInput">Explain this report in plain language and give 3 actions.</textarea>
+      <div class="row">
+        <button id="explainBtn" class="secondary">Explain</button>
+      </div>
+      <pre id="explainOutput">No explanation yet.</pre>
+    </div>
+
+    <div class="card">
+      <h3>3) Draft SQL</h3>
+      <label for="schemaInput">Schema context</label>
+      <textarea id="schemaInput">orders(id, order_date, customer_id, total_amount), customers(id, name)</textarea>
+      <label for="requestInput">Report request</label>
+      <textarea id="requestInput">Create a monthly sales trend report by customer segment.</textarea>
+      <div class="row">
+        <button id="draftBtn" class="secondary">Draft SQL</button>
+      </div>
+      <pre id="draftOutput">No SQL draft yet.</pre>
+    </div>
+  </div>
+
+  <script>
+    const reportSelect = document.getElementById('reportSelect');
+    const limitInput = document.getElementById('limitInput');
+    const runBtn = document.getElementById('runBtn');
+    const explainBtn = document.getElementById('explainBtn');
+    const draftBtn = document.getElementById('draftBtn');
+
+    const reportOutput = document.getElementById('reportOutput');
+    const explainOutput = document.getElementById('explainOutput');
+    const draftOutput = document.getElementById('draftOutput');
+
+    const goalInput = document.getElementById('goalInput');
+    const schemaInput = document.getElementById('schemaInput');
+    const requestInput = document.getElementById('requestInput');
+
+    let lastReportRows = [];
+
+    async function api(path, options = {}) {
+      const response = await fetch(path, {
+        headers: { 'Content-Type': 'application/json' },
+        ...options,
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Request failed');
+      }
+      return data;
+    }
+
+    async function loadReports() {
+      const reports = await api('/reports');
+      reportSelect.innerHTML = reports
+        .map((r) => `<option value="${r.report_id}">${r.title} (${r.report_id})</option>`)
+        .join('');
+    }
+
+    runBtn.addEventListener('click', async () => {
+      try {
+        const payload = {
+          report_id: reportSelect.value,
+          use_mock_data: true,
+          params: { limit: Number(limitInput.value || 5) },
+        };
+        const result = await api('/reports/run', { method: 'POST', body: JSON.stringify(payload) });
+        lastReportRows = result.rows || [];
+        reportOutput.textContent = JSON.stringify(result, null, 2);
+      } catch (err) {
+        reportOutput.textContent = String(err.message || err);
+      }
+    });
+
+    explainBtn.addEventListener('click', async () => {
+      try {
+        if (!lastReportRows.length) {
+          explainOutput.textContent = 'Run a report first.';
+          return;
+        }
+        const payload = {
+          report_id: reportSelect.value,
+          rows: lastReportRows,
+          user_goal: goalInput.value,
+        };
+        const result = await api('/reports/explain', { method: 'POST', body: JSON.stringify(payload) });
+        explainOutput.textContent = result.explanation;
+      } catch (err) {
+        explainOutput.textContent = String(err.message || err);
+      }
+    });
+
+    draftBtn.addEventListener('click', async () => {
+      try {
+        const payload = {
+          schema_context: schemaInput.value,
+          request: requestInput.value,
+        };
+        const result = await api('/reports/sql-draft', { method: 'POST', body: JSON.stringify(payload) });
+        draftOutput.textContent = JSON.stringify(result, null, 2);
+      } catch (err) {
+        draftOutput.textContent = String(err.message || err);
+      }
+    });
+
+    loadReports().catch((err) => {
+      reportOutput.textContent = `Failed to load reports: ${err.message || err}`;
+    });
+  </script>
+</body>
+</html>
