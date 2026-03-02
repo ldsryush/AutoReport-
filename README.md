@@ -32,6 +32,11 @@ If you skip `.env`, defaults are used (mock data mode is enabled by default).
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
+Or use the one-command launcher for collaborators:
+
+```powershell
+.\start.ps1
+
 Open Swagger UI:
 
 - http://127.0.0.1:8000/docs
