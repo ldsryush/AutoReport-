@@ -18,12 +18,14 @@
     pre { background: #0f172a; color: #e2e8f0; padding: 12px; border-radius: 8px; overflow: auto; }
     .muted { color: #6b7280; font-size: 13px; }
     label { font-size: 13px; color: #374151; }
+    .chart-wrap { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 8px; min-height: 320px; }
+    #chartStatus { margin-top: 8px; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>AutoReport MVP</h1>
-    <p class="muted">Run mock reports, explain results, and draft SQL from one page.</p>
+    <p class="muted">Run mock reports, chart results, explain findings, and draft SQL from one page.</p>
 
     <div class="card">
       <h3>1) Run Report</h3>
@@ -37,7 +39,26 @@
     </div>
 
     <div class="card">
-      <h3>2) Explain Report</h3>
+      <h3>2) Visualize Report</h3>
+      <div class="row">
+        <select id="chartTypeSelect">
+          <option value="bar">Bar</option>
+          <option value="line">Line</option>
+          <option value="pie">Pie</option>
+        </select>
+        <select id="xKeySelect"></select>
+        <select id="yKeySelect"></select>
+        <button id="renderChartBtn" class="secondary">Render Chart</button>
+      </div>
+      <p class="muted">Pick X-axis/category and numeric Y value from report output.</p>
+      <div class="chart-wrap">
+        <canvas id="reportChart"></canvas>
+      </div>
+      <p id="chartStatus" class="muted">Run a report to generate chart options.</p>
+    </div>
+
+    <div class="card">
+      <h3>3) Explain Report</h3>
       <label for="goalInput">Goal</label>
       <textarea id="goalInput">Explain this report in plain language and give 3 actions.</textarea>
       <div class="row">
@@ -47,7 +68,7 @@
     </div>
 
     <div class="card">
-      <h3>3) Draft SQL</h3>
+      <h3>4) Draft SQL</h3>
       <label for="schemaInput">Schema context</label>
       <textarea id="schemaInput">orders(id, order_date, customer_id, total_amount), customers(id, name)</textarea>
       <label for="requestInput">Report request</label>
@@ -59,22 +80,132 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     const reportSelect = document.getElementById('reportSelect');
     const limitInput = document.getElementById('limitInput');
     const runBtn = document.getElementById('runBtn');
+    const chartTypeSelect = document.getElementById('chartTypeSelect');
+    const xKeySelect = document.getElementById('xKeySelect');
+    const yKeySelect = document.getElementById('yKeySelect');
+    const renderChartBtn = document.getElementById('renderChartBtn');
     const explainBtn = document.getElementById('explainBtn');
     const draftBtn = document.getElementById('draftBtn');
 
     const reportOutput = document.getElementById('reportOutput');
+    const chartStatus = document.getElementById('chartStatus');
     const explainOutput = document.getElementById('explainOutput');
     const draftOutput = document.getElementById('draftOutput');
 
     const goalInput = document.getElementById('goalInput');
     const schemaInput = document.getElementById('schemaInput');
     const requestInput = document.getElementById('requestInput');
+    const reportChartCanvas = document.getElementById('reportChart');
 
     let lastReportRows = [];
+    let activeChart = null;
+
+    function isNumericValue(value) {
+      if (value === null || value === undefined || value === '') {
+        return false;
+      }
+      return Number.isFinite(Number(value));
+    }
+
+    function populateSelect(selectEl, keys) {
+      selectEl.innerHTML = keys
+        .map((key) => `<option value="${key}">${key}</option>`)
+        .join('');
+    }
+
+    function setupChartFields(rows) {
+      if (!rows.length) {
+        populateSelect(xKeySelect, []);
+        populateSelect(yKeySelect, []);
+        chartStatus.textContent = 'No rows available for charting.';
+        return;
+      }
+
+      const allKeys = Object.keys(rows[0]);
+      const numericKeys = allKeys.filter((key) => rows.some((row) => isNumericValue(row[key])));
+      const categoryKeys = allKeys.filter((key) => !numericKeys.includes(key));
+
+      const xKeys = categoryKeys.length ? categoryKeys : allKeys;
+      const yKeys = numericKeys;
+
+      populateSelect(xKeySelect, xKeys);
+      populateSelect(yKeySelect, yKeys);
+
+      if (!yKeys.length) {
+        chartStatus.textContent = 'No numeric columns found for Y values.';
+      } else {
+        chartStatus.textContent = 'Chart fields loaded. Click Render Chart.';
+      }
+    }
+
+    function buildChartData(rows, xKey, yKey) {
+      return rows
+        .map((row) => ({ label: String(row[xKey]), value: Number(row[yKey]) }))
+        .filter((item) => Number.isFinite(item.value));
+    }
+
+    function renderChart() {
+      if (!lastReportRows.length) {
+        chartStatus.textContent = 'Run a report first.';
+        return;
+      }
+
+      const chartType = chartTypeSelect.value;
+      const xKey = xKeySelect.value;
+      const yKey = yKeySelect.value;
+
+      if (!xKey || !yKey) {
+        chartStatus.textContent = 'Select both X and Y fields.';
+        return;
+      }
+
+      const points = buildChartData(lastReportRows, xKey, yKey);
+      if (!points.length) {
+        chartStatus.textContent = 'No numeric data points available for selected fields.';
+        return;
+      }
+
+      if (activeChart) {
+        activeChart.destroy();
+      }
+
+      const labels = points.map((point) => point.label);
+      const data = points.map((point) => point.value);
+      const palette = ['#2563eb', '#16a34a', '#f59e0b', '#dc2626', '#7c3aed', '#0ea5e9', '#ef4444'];
+
+      activeChart = new Chart(reportChartCanvas, {
+        type: chartType,
+        data: {
+          labels,
+          datasets: [
+            {
+              label: yKey,
+              data,
+              borderColor: '#1d4ed8',
+              backgroundColor: chartType === 'pie'
+                ? labels.map((_, i) => palette[i % palette.length])
+                : 'rgba(37, 99, 235, 0.5)',
+              borderWidth: 1,
+              fill: chartType === 'line'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true }
+          }
+        }
+      });
+
+      chartStatus.textContent = `Rendered ${chartType} chart using ${xKey} and ${yKey}.`;
+    }
 
     async function api(path, options = {}) {
       const response = await fetch(path, {
@@ -105,9 +236,17 @@
         const result = await api('/reports/run', { method: 'POST', body: JSON.stringify(payload) });
         lastReportRows = result.rows || [];
         reportOutput.textContent = JSON.stringify(result, null, 2);
+        setupChartFields(lastReportRows);
+        if (lastReportRows.length) {
+          renderChart();
+        }
       } catch (err) {
         reportOutput.textContent = String(err.message || err);
       }
+    });
+
+    renderChartBtn.addEventListener('click', () => {
+      renderChart();
     });
 
     explainBtn.addEventListener('click', async () => {

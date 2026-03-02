@@ -3,6 +3,7 @@
 AutoReport is a FastAPI app that:
 
 - Runs report templates using mock data by default (MVP)
+- Visualizes report output as bar, line, and pie charts in the UI
 - Can connect to your existing database when enabled
 - Uses OpenAI to explain report output in plain language
 - Uses OpenAI to draft SQL for new report ideas
@@ -31,12 +32,6 @@ If you skip `.env`, defaults are used (mock data mode is enabled by default).
 ```bash
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
-
-Or use the one-command launcher for collaborators:
-
-```powershell
-.\start.ps1
-
 Open Swagger UI:
 
 - http://127.0.0.1:8000/docs
