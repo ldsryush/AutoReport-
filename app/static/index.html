@@ -221,8 +221,8 @@
         </section>
 
         <section class="card">
-          <h3>Task Summary</h3>
-          <div class="chart-box"><canvas id="summaryChart"></canvas></div>
+          <h3>Billings</h3>
+          <div class="chart-box"><canvas id="billingsChart"></canvas></div>
         </section>
 
         <section class="card full-width">
@@ -342,7 +342,7 @@
           labels,
           datasets: [
             { label: 'To-Do Tasks', data: values, backgroundColor: colors.cyanSoft, borderColor: colors.cyan, borderWidth: 1 },
-            { label: 'Total', data: halfValues, backgroundColor: colors.purpleSoft, borderColor: colors.purple, borderWidth: 1 }
+              { label: 'Completed Tasks', data: halfValues, backgroundColor: colors.purpleSoft, borderColor: colors.purple, borderWidth: 1 }
           ]
         },
         options: { responsive: true, maintainAspectRatio: false }
@@ -364,20 +364,35 @@
         }
       });
 
-      charts.summary = new Chart(document.getElementById('summaryChart'), {
-        type: 'bar',
+      const billings = values.map((v) => Math.max(0, Math.round(v * 1.08)));
+
+      charts.billings = new Chart(document.getElementById('billingsChart'), {
+        type: 'line',
         data: {
           labels,
           datasets: [
-            { label: 'Completed %', data: values.map((v) => Math.min(100, Math.round(v))), backgroundColor: colors.cyan },
-            { label: 'Remaining %', data: values.map((v) => Math.max(0, 100 - Math.min(100, Math.round(v)))), backgroundColor: colors.purple }
+            {
+              label: 'Billings',
+              data: billings,
+              borderColor: colors.cyan,
+              backgroundColor: colors.cyanSoft,
+              borderWidth: 2,
+              tension: 0.25,
+              fill: true
+            }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          indexAxis: 'y',
-          scales: { x: { stacked: true, max: 100 }, y: { stacked: true } }
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: (value) => `$${Number(value).toLocaleString()}`
+              }
+            }
+          }
         }
       });
     }

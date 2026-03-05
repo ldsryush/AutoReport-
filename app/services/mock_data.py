@@ -9,11 +9,11 @@ class MockDataError(Exception):
 
 
 _SALES_SUMMARY_ROWS = [
+    {"day": date(2025, 11, 1), "total_orders": 92, "revenue": 11240.20},
+    {"day": date(2025, 12, 1), "total_orders": 104, "revenue": 12795.85},
+    {"day": date(2026, 1, 1), "total_orders": 111, "revenue": 13510.40},
+    {"day": date(2026, 2, 1), "total_orders": 119, "revenue": 14602.10},
     {"day": date(2026, 3, 1), "total_orders": 124, "revenue": 15239.55},
-    {"day": date(2026, 2, 28), "total_orders": 119, "revenue": 14602.10},
-    {"day": date(2026, 2, 27), "total_orders": 108, "revenue": 13011.45},
-    {"day": date(2026, 2, 26), "total_orders": 132, "revenue": 16123.00},
-    {"day": date(2026, 2, 25), "total_orders": 97, "revenue": 12098.75},
 ]
 
 _TOP_CUSTOMERS_ROWS = [
