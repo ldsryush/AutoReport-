@@ -243,8 +243,6 @@
               <pre id="draftOutput">No SQL draft yet.</pre>
             </div>
           </div>
-          <p class="output-label">Report Data Output</p>
-          <pre id="reportOutput">No data yet.</pre>
         </section>
       </main>
     </div>
@@ -261,7 +259,6 @@
     const goalInput = document.getElementById('goalInput');
     const requestInput = document.getElementById('requestInput');
 
-    const reportOutput = document.getElementById('reportOutput');
     const explainOutput = document.getElementById('explainOutput');
     const draftOutput = document.getElementById('draftOutput');
 
@@ -451,10 +448,9 @@
         };
         const result = await api('/reports/run', { method: 'POST', body: JSON.stringify(payload) });
         lastReportRows = result.rows || [];
-        reportOutput.textContent = JSON.stringify(result, null, 2);
         createCharts(lastReportRows);
       } catch (err) {
-        reportOutput.textContent = String(err.message || err);
+        explainOutput.textContent = `Run error: ${String(err.message || err)}`;
       }
     });
 
@@ -492,7 +488,7 @@
     loadReports()
       .then(() => runBtn.click())
       .catch((err) => {
-        reportOutput.textContent = `Failed to load reports: ${err.message || err}`;
+        explainOutput.textContent = `Load error: ${err.message || err}`;
       });
   </script>
 </body>
