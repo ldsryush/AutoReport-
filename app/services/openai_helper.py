@@ -62,6 +62,8 @@ class OpenAIService:
             f"Schema context:\n{schema_context}\n\n"
             f"Request:\n{request}\n\n"
             "Return JSON with keys sql and notes. "
+            "Write notes in simple business language for non-technical clients. "
+            "Avoid SQL jargon in notes. Keep notes to 3-5 short bullet points. "
             "Do not wrap in markdown."
         )
         try:
