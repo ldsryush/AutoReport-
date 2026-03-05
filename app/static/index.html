@@ -204,9 +204,9 @@
           <div class="control-row">
             <select id="reportSelect"></select>
             <input id="limitInput" type="number" min="1" value="5" />
-            <button id="runBtn">Run</button>
+            <button id="runBtn">Run Report</button>
           </div>
-          <p class="muted">Uses mock data by default. Chart updates after each run.</p>
+          <p class="muted">Select a report and click <strong>Run Report</strong>. Uses mock data by default.</p>
           <div class="chart-box"><canvas id="contractStatusChart"></canvas></div>
         </section>
 
@@ -216,8 +216,8 @@
         </section>
 
         <section class="card">
-          <h3 class="purple">Overdue Task</h3>
-          <div class="chart-box"><canvas id="overdueChart"></canvas></div>
+          <h3 class="purple">Gross Profit</h3>
+          <div class="chart-box"><canvas id="grossProfitChart"></canvas></div>
         </section>
 
         <section class="card">
@@ -225,23 +225,19 @@
           <div class="chart-box"><canvas id="billingsChart"></canvas></div>
         </section>
 
+        <section class="card">
+          <h3 class="purple">Performance</h3>
+          <div class="chart-box"><canvas id="performanceChart"></canvas></div>
+        </section>
+
         <section class="card full-width">
           <h3>AI Tools</h3>
-          <div class="ai-row">
-            <div>
-              <p class="muted">Explain report insights</p>
-              <textarea id="goalInput">Explain this report in plain language and give 3 actions.</textarea>
-              <button id="explainBtn">Explain</button>
-              <p class="output-label">Explanation Output</p>
-              <pre id="explainOutput">No explanation yet.</pre>
-            </div>
-            <div>
-              <p class="muted">Generate SQL draft</p>
-              <textarea id="requestInput">Create a monthly sales trend report by customer segment.</textarea>
-              <button id="draftBtn">Draft SQL</button>
-              <p class="output-label">SQL Draft Output</p>
-              <pre id="draftOutput">No SQL draft yet.</pre>
-            </div>
+          <div>
+            <p class="muted">Explain report insights</p>
+            <textarea id="goalInput">Explain this report in plain language and give 3 actions.</textarea>
+            <button id="explainBtn">Explain</button>
+            <p class="output-label">Explanation Output</p>
+            <pre id="explainOutput">No explanation yet.</pre>
           </div>
         </section>
       </main>
@@ -254,13 +250,10 @@
     const limitInput = document.getElementById('limitInput');
     const runBtn = document.getElementById('runBtn');
     const explainBtn = document.getElementById('explainBtn');
-    const draftBtn = document.getElementById('draftBtn');
 
     const goalInput = document.getElementById('goalInput');
-    const requestInput = document.getElementById('requestInput');
 
     const explainOutput = document.getElementById('explainOutput');
-    const draftOutput = document.getElementById('draftOutput');
 
     const colors = {
       cyan: '#14b5e6',
@@ -322,7 +315,8 @@
 
       const labels = points.map((p) => p.label);
       const values = points.map((p) => p.value);
-      const halfValues = values.map((v) => Math.max(1, Math.round(v * 0.6)));
+      const totalValues = values.map((v) => Math.max(1, Math.round(v)));
+      const todoValues = totalValues.map((v) => Math.max(0, Math.round(v * 0.62)));
 
       charts.contractStatus = new Chart(document.getElementById('contractStatusChart'), {
         type: 'doughnut',
@@ -341,30 +335,40 @@
         data: {
           labels,
           datasets: [
-            { label: 'To-Do Tasks', data: values, backgroundColor: colors.cyanSoft, borderColor: colors.cyan, borderWidth: 1 },
-              { label: 'Completed Tasks', data: halfValues, backgroundColor: colors.purpleSoft, borderColor: colors.purple, borderWidth: 1 }
+            { label: 'To-Do Tasks', data: todoValues, backgroundColor: colors.cyanSoft, borderColor: colors.cyan, borderWidth: 1 },
+            { label: 'Total', data: totalValues, backgroundColor: colors.purpleSoft, borderColor: colors.purple, borderWidth: 1 }
           ]
         },
         options: { responsive: true, maintainAspectRatio: false }
       });
 
-      charts.overdue = new Chart(document.getElementById('overdueChart'), {
+      const grossProfit = values.map((v) => Math.max(0, Math.round(v * 0.42)));
+
+      charts.grossProfit = new Chart(document.getElementById('grossProfitChart'), {
         type: 'bar',
         data: {
           labels,
           datasets: [
-            { label: 'Overdue', data: halfValues, backgroundColor: colors.purpleSoft, borderColor: colors.purple, borderWidth: 1 },
-            { label: 'Open', data: values, backgroundColor: colors.cyanSoft, borderColor: colors.cyan, borderWidth: 1 }
+            { label: 'Gross Profit', data: grossProfit, backgroundColor: colors.purpleSoft, borderColor: colors.purple, borderWidth: 1 }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          scales: { x: { stacked: true }, y: { stacked: true } }
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: (value) => `$${Number(value).toLocaleString()}`
+              }
+            }
+          }
         }
       });
 
-      const billings = values.map((v) => Math.max(0, Math.round(v * 1.08)));
+      const billings = totalValues.map((v) => Math.max(0, Math.round(v * 1.08)));
+      const maxValue = Math.max(...values, 1);
+      const performance = values.map((v) => Math.round((v / maxValue) * 100));
 
       charts.billings = new Chart(document.getElementById('billingsChart'), {
         type: 'line',
@@ -395,6 +399,37 @@
           }
         }
       });
+
+      charts.performance = new Chart(document.getElementById('performanceChart'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Performance %',
+              data: performance,
+              borderColor: colors.purple,
+              backgroundColor: colors.purpleSoft,
+              borderWidth: 2,
+              tension: 0.3,
+              fill: true
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              ticks: {
+                callback: (value) => `${Number(value)}%`
+              }
+            }
+          }
+        }
+      });
     }
 
     async function api(path, options = {}) {
@@ -414,44 +449,6 @@
       reportSelect.innerHTML = reports
         .map((report) => `<option value="${report.report_id}">${report.title} (${report.report_id})</option>`)
         .join('');
-    }
-
-    function formatSqlDraftForClient(result) {
-      const notesRaw = (result.notes || 'No summary available.').trim();
-      const sql = (result.sql || 'No SQL draft available.').trim();
-
-      function normalizeNotes(raw) {
-        if (!raw) {
-          return '- No summary available.';
-        }
-
-        const trimmed = raw.trim();
-
-        if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
-          const matches = [...trimmed.matchAll(/'([^']+)'/g)].map((match) => match[1].trim());
-          if (matches.length) {
-            return matches.map((item) => `- ${item}`).join('\n');
-          }
-        }
-
-        if (trimmed.includes('\n- ') || trimmed.startsWith('- ')) {
-          return trimmed;
-        }
-
-        return `- ${trimmed}`;
-      }
-
-      const notes = normalizeNotes(notesRaw);
-
-      return [
-        'Client Summary',
-        '--------------',
-        notes,
-        '',
-        'Technical SQL Draft',
-        '-------------------',
-        sql
-      ].join('\n');
     }
 
     runBtn.addEventListener('click', async () => {
@@ -484,19 +481,6 @@
         explainOutput.textContent = result.explanation;
       } catch (err) {
         explainOutput.textContent = String(err.message || err);
-      }
-    });
-
-    draftBtn.addEventListener('click', async () => {
-      try {
-        const payload = {
-          schema_context: 'orders(id, order_date, customer_id, total_amount), customers(id, name)',
-          request: requestInput.value
-        };
-        const result = await api('/reports/sql-draft', { method: 'POST', body: JSON.stringify(payload) });
-        draftOutput.textContent = formatSqlDraftForClient(result);
-      } catch (err) {
-        draftOutput.textContent = String(err.message || err);
       }
     });
 

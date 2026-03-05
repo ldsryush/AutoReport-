@@ -13,16 +13,16 @@ class ReportTemplate:
 REPORTS: dict[str, ReportTemplate] = {
     "sales_summary": ReportTemplate(
         report_id="sales_summary",
-        title="Daily sales summary",
+        title="Monthly sales summary",
         sql="""
             SELECT
-                DATE(order_date) AS day,
+                DATE_TRUNC('month', order_date)::date AS day,
                 COUNT(*) AS total_orders,
                 COALESCE(SUM(total_amount), 0) AS revenue
             FROM orders
             WHERE (:start_date IS NULL OR order_date >= :start_date)
               AND (:end_date IS NULL OR order_date <= :end_date)
-            GROUP BY DATE(order_date)
+            GROUP BY DATE_TRUNC('month', order_date)::date
             ORDER BY day DESC
             LIMIT :limit
         """,
