@@ -211,7 +211,7 @@
         </section>
 
         <section class="card">
-          <h3 class="purple">To-Do Tasks and Total</h3>
+          <h3 class="purple">Completed Tasks and Total</h3>
           <div class="chart-box"><canvas id="taskTotalChart"></canvas></div>
         </section>
 
@@ -335,7 +335,7 @@
         data: {
           labels,
           datasets: [
-            { label: 'To-Do Tasks', data: todoValues, backgroundColor: colors.cyanSoft, borderColor: colors.cyan, borderWidth: 1 },
+            { label: 'Completed Tasks', data: todoValues, backgroundColor: colors.cyanSoft, borderColor: colors.cyan, borderWidth: 1 },
             { label: 'Total', data: totalValues, backgroundColor: colors.purpleSoft, borderColor: colors.purple, borderWidth: 1 }
           ]
         },
