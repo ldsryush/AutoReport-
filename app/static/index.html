@@ -172,7 +172,7 @@
   <div class="app">
     <div class="title-wrap">
       <div class="title-accent"></div>
-      <h1>QUARTERLY <span class="blue">REPORT</span></h1>
+      <h1><span class="blue">AutoReport</span></h1>
     </div>
 
     <div class="layout">
@@ -211,7 +211,7 @@
         </section>
 
         <section class="card">
-          <h3 class="purple">Task and Total</h3>
+          <h3 class="purple">To-Do Tasks and Total</h3>
           <div class="chart-box"><canvas id="taskTotalChart"></canvas></div>
         </section>
 
@@ -341,7 +341,7 @@
         data: {
           labels,
           datasets: [
-            { label: 'Task', data: values, backgroundColor: colors.cyanSoft, borderColor: colors.cyan, borderWidth: 1 },
+            { label: 'To-Do Tasks', data: values, backgroundColor: colors.cyanSoft, borderColor: colors.cyan, borderWidth: 1 },
             { label: 'Total', data: halfValues, backgroundColor: colors.purpleSoft, borderColor: colors.purple, borderWidth: 1 }
           ]
         },
