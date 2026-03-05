@@ -40,6 +40,11 @@ class OpenAIService:
             )
             return response.output_text.strip()
         except Exception as exc:
+            message = str(exc)
+            if "invalid_api_key" in message or "Incorrect API key provided" in message:
+                raise OpenAIServiceError(
+                    "OpenAI authentication failed. Verify OPENAI_API_KEY in .env and restart the server."
+                ) from exc
             raise OpenAIServiceError(str(exc)) from exc
 
     def draft_sql(self, schema_context: str, request: str) -> tuple[str, str]:
@@ -68,4 +73,9 @@ class OpenAIService:
             data = json.loads(text)
             return str(data.get("sql", "")), str(data.get("notes", ""))
         except Exception as exc:
+            message = str(exc)
+            if "invalid_api_key" in message or "Incorrect API key provided" in message:
+                raise OpenAIServiceError(
+                    "OpenAI authentication failed. Verify OPENAI_API_KEY in .env and restart the server."
+                ) from exc
             raise OpenAIServiceError(str(exc)) from exc

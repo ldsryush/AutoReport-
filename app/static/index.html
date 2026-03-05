@@ -3,80 +3,233 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AutoReport MVP</title>
+  <title>AutoReport Dashboard</title>
   <style>
-    :root { font-family: Segoe UI, Arial, sans-serif; }
-    body { margin: 0; padding: 24px; background: #f5f7fb; color: #1f2937; }
-    .container { max-width: 980px; margin: 0 auto; }
-    h1 { margin: 0 0 16px; }
-    .card { background: white; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
-    .row { display: flex; gap: 8px; flex-wrap: wrap; }
-    input, select, textarea, button { padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
-    textarea { width: 100%; min-height: 88px; }
-    button { cursor: pointer; background: #111827; color: #fff; border: none; }
-    button.secondary { background: #374151; }
-    pre { background: #0f172a; color: #e2e8f0; padding: 12px; border-radius: 8px; overflow: auto; }
-    .muted { color: #6b7280; font-size: 13px; }
-    label { font-size: 13px; color: #374151; }
-    .chart-wrap { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 8px; min-height: 320px; }
-    #chartStatus { margin-top: 8px; }
+    :root {
+      font-family: Segoe UI, Arial, sans-serif;
+      --cyan: #14b5e6;
+      --purple: #8e5adf;
+      --pink: #f06292;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --bg: #f3f5f9;
+      --card: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); }
+    .app {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    .title-wrap { margin-bottom: 18px; }
+    .title-accent {
+      width: 96px;
+      height: 6px;
+      border-radius: 8px;
+      background: var(--cyan);
+      margin-bottom: 8px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 44px;
+      line-height: 1;
+      letter-spacing: 0.4px;
+    }
+    h1 .blue { color: var(--cyan); }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 16px;
+    }
+
+    .sidebar {
+      background: #eef2f5;
+      border-radius: 12px;
+      padding: 14px;
+      border: 1px solid #e7ebf0;
+    }
+    .pill {
+      border-radius: 999px;
+      color: #fff;
+      font-weight: 700;
+      font-size: 22px;
+      padding: 11px 16px;
+      margin: 8px 0;
+    }
+    .pill.timeline { background: var(--cyan); }
+    .pill.report { background: var(--purple); }
+    .pill.shortcut { background: #f36264; }
+
+    .bullet-list {
+      margin: 6px 0 14px 20px;
+      padding: 0;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 15px;
+    }
+
+    .main {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      min-height: 260px;
+    }
+    .card h3 {
+      margin: 0 0 8px;
+      color: var(--cyan);
+      font-size: 28px;
+    }
+    .card h3.purple { color: var(--purple); }
+
+    .control-row {
+      display: grid;
+      grid-template-columns: minmax(200px, 1fr) 90px 90px;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    select, input, button {
+      border: 1px solid #d2d9e2;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 14px;
+      background: #fff;
+    }
+    button {
+      background: var(--cyan);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .chart-box {
+      position: relative;
+      height: 190px;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+      min-height: 180px;
+    }
+    .ai-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 82px;
+      border: 1px solid #d2d9e2;
+      border-radius: 8px;
+      padding: 8px;
+      resize: vertical;
+      font-size: 14px;
+    }
+    pre {
+      margin: 8px 0 0;
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 8px;
+      padding: 10px;
+      max-height: 160px;
+      overflow: auto;
+      white-space: pre-wrap;
+    }
+    .muted { color: var(--muted); font-size: 13px; margin: 0 0 8px; }
+
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+      .main { grid-template-columns: 1fr; }
+      .control-row { grid-template-columns: 1fr; }
+      .ai-row { grid-template-columns: 1fr; }
+      h1 { font-size: 34px; }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>AutoReport MVP</h1>
-    <p class="muted">Run mock reports, chart results, explain findings, and draft SQL from one page.</p>
-
-    <div class="card">
-      <h3>1) Run Report</h3>
-      <div class="row">
-        <select id="reportSelect"></select>
-        <input id="limitInput" type="number" value="5" min="1" />
-        <button id="runBtn">Run</button>
-      </div>
-      <p class="muted">Uses mock data by default.</p>
-      <pre id="reportOutput">No data yet.</pre>
+  <div class="app">
+    <div class="title-wrap">
+      <div class="title-accent"></div>
+      <h1>QUARTERLY <span class="blue">REPORT</span></h1>
     </div>
 
-    <div class="card">
-      <h3>2) Visualize Report</h3>
-      <div class="row">
-        <select id="chartTypeSelect">
-          <option value="bar">Bar</option>
-          <option value="line">Line</option>
-          <option value="pie">Pie</option>
-        </select>
-        <select id="xKeySelect"></select>
-        <select id="yKeySelect"></select>
-        <button id="renderChartBtn" class="secondary">Render Chart</button>
-      </div>
-      <p class="muted">Pick X-axis/category and numeric Y value from report output.</p>
-      <div class="chart-wrap">
-        <canvas id="reportChart"></canvas>
-      </div>
-      <p id="chartStatus" class="muted">Run a report to generate chart options.</p>
-    </div>
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="pill timeline">Timeline</div>
+        <ul class="bullet-list">
+          <li>Project Timeline</li>
+          <li>Task Timeline</li>
+        </ul>
 
-    <div class="card">
-      <h3>3) Explain Report</h3>
-      <label for="goalInput">Goal</label>
-      <textarea id="goalInput">Explain this report in plain language and give 3 actions.</textarea>
-      <div class="row">
-        <button id="explainBtn" class="secondary">Explain</button>
-      </div>
-      <pre id="explainOutput">No explanation yet.</pre>
-    </div>
+        <div class="pill report">Report</div>
+        <ul class="bullet-list">
+          <li>Open Project</li>
+          <li>Open Tasks</li>
+          <li>Overdue Tasks</li>
+        </ul>
 
-    <div class="card">
-      <h3>4) Draft SQL</h3>
-      <label for="schemaInput">Schema context</label>
-      <textarea id="schemaInput">orders(id, order_date, customer_id, total_amount), customers(id, name)</textarea>
-      <label for="requestInput">Report request</label>
-      <textarea id="requestInput">Create a monthly sales trend report by customer segment.</textarea>
-      <div class="row">
-        <button id="draftBtn" class="secondary">Draft SQL</button>
-      </div>
-      <pre id="draftOutput">No SQL draft yet.</pre>
+        <div class="pill shortcut">Report Shortcut</div>
+        <ul class="bullet-list">
+          <li>Completed Projects</li>
+          <li>On Hold Projects</li>
+          <li>Active Projects</li>
+        </ul>
+      </aside>
+
+      <main class="main">
+        <section class="card">
+          <h3>Contract Status</h3>
+          <div class="control-row">
+            <select id="reportSelect"></select>
+            <input id="limitInput" type="number" min="1" value="5" />
+            <button id="runBtn">Run</button>
+          </div>
+          <p class="muted">Uses mock data by default. Chart updates after each run.</p>
+          <div class="chart-box"><canvas id="contractStatusChart"></canvas></div>
+        </section>
+
+        <section class="card">
+          <h3 class="purple">Task and Total</h3>
+          <div class="chart-box"><canvas id="taskTotalChart"></canvas></div>
+        </section>
+
+        <section class="card">
+          <h3 class="purple">Overdue Task</h3>
+          <div class="chart-box"><canvas id="overdueChart"></canvas></div>
+        </section>
+
+        <section class="card">
+          <h3>Task Summary</h3>
+          <div class="chart-box"><canvas id="summaryChart"></canvas></div>
+        </section>
+
+        <section class="card full-width">
+          <h3>AI Tools</h3>
+          <div class="ai-row">
+            <div>
+              <p class="muted">Explain report insights</p>
+              <textarea id="goalInput">Explain this report in plain language and give 3 actions.</textarea>
+              <button id="explainBtn">Explain</button>
+              <pre id="explainOutput">No explanation yet.</pre>
+            </div>
+            <div>
+              <p class="muted">Generate SQL draft</p>
+              <textarea id="requestInput">Create a monthly sales trend report by customer segment.</textarea>
+              <button id="draftBtn">Draft SQL</button>
+              <pre id="draftOutput">No SQL draft yet.</pre>
+            </div>
+          </div>
+          <pre id="reportOutput">No data yet.</pre>
+        </section>
+      </main>
     </div>
   </div>
 
@@ -85,132 +238,140 @@
     const reportSelect = document.getElementById('reportSelect');
     const limitInput = document.getElementById('limitInput');
     const runBtn = document.getElementById('runBtn');
-    const chartTypeSelect = document.getElementById('chartTypeSelect');
-    const xKeySelect = document.getElementById('xKeySelect');
-    const yKeySelect = document.getElementById('yKeySelect');
-    const renderChartBtn = document.getElementById('renderChartBtn');
     const explainBtn = document.getElementById('explainBtn');
     const draftBtn = document.getElementById('draftBtn');
 
+    const goalInput = document.getElementById('goalInput');
+    const requestInput = document.getElementById('requestInput');
+
     const reportOutput = document.getElementById('reportOutput');
-    const chartStatus = document.getElementById('chartStatus');
     const explainOutput = document.getElementById('explainOutput');
     const draftOutput = document.getElementById('draftOutput');
 
-    const goalInput = document.getElementById('goalInput');
-    const schemaInput = document.getElementById('schemaInput');
-    const requestInput = document.getElementById('requestInput');
-    const reportChartCanvas = document.getElementById('reportChart');
+    const colors = {
+      cyan: '#14b5e6',
+      cyanSoft: 'rgba(20, 181, 230, 0.45)',
+      purple: '#8e5adf',
+      purpleSoft: 'rgba(142, 90, 223, 0.45)',
+      pink: '#f06292',
+      mint: '#22d3b6'
+    };
 
     let lastReportRows = [];
-    let activeChart = null;
+    let charts = {};
 
-    function isNumericValue(value) {
-      if (value === null || value === undefined || value === '') {
-        return false;
-      }
-      return Number.isFinite(Number(value));
+    function isNumeric(value) {
+      return value !== null && value !== '' && Number.isFinite(Number(value));
     }
 
-    function populateSelect(selectEl, keys) {
-      selectEl.innerHTML = keys
-        .map((key) => `<option value="${key}">${key}</option>`)
-        .join('');
+    function destroyCharts() {
+      Object.values(charts).forEach((chart) => chart.destroy());
+      charts = {};
     }
 
-    function setupChartFields(rows) {
+    function getBestColumns(rows) {
       if (!rows.length) {
-        populateSelect(xKeySelect, []);
-        populateSelect(yKeySelect, []);
-        chartStatus.textContent = 'No rows available for charting.';
-        return;
+        return { xKey: null, yKey: null };
       }
 
-      const allKeys = Object.keys(rows[0]);
-      const numericKeys = allKeys.filter((key) => rows.some((row) => isNumericValue(row[key])));
-      const categoryKeys = allKeys.filter((key) => !numericKeys.includes(key));
+      const keys = Object.keys(rows[0]);
+      const numericKeys = keys.filter((key) => rows.some((row) => isNumeric(row[key])));
+      const xCandidates = keys.filter((key) => !numericKeys.includes(key));
 
-      const xKeys = categoryKeys.length ? categoryKeys : allKeys;
-      const yKeys = numericKeys;
-
-      populateSelect(xKeySelect, xKeys);
-      populateSelect(yKeySelect, yKeys);
-
-      if (!yKeys.length) {
-        chartStatus.textContent = 'No numeric columns found for Y values.';
-      } else {
-        chartStatus.textContent = 'Chart fields loaded. Click Render Chart.';
-      }
+      return {
+        xKey: xCandidates[0] || keys[0],
+        yKey: numericKeys[0] || keys[0]
+      };
     }
 
-    function buildChartData(rows, xKey, yKey) {
+    function normalizePoints(rows, xKey, yKey) {
       return rows
-        .map((row) => ({ label: String(row[xKey]), value: Number(row[yKey]) }))
+        .map((row) => ({
+          label: String(row[xKey]),
+          value: Number(row[yKey])
+        }))
         .filter((item) => Number.isFinite(item.value));
     }
 
-    function renderChart() {
-      if (!lastReportRows.length) {
-        chartStatus.textContent = 'Run a report first.';
+    function createCharts(rows) {
+      destroyCharts();
+
+      if (!rows.length) {
         return;
       }
 
-      const chartType = chartTypeSelect.value;
-      const xKey = xKeySelect.value;
-      const yKey = yKeySelect.value;
-
-      if (!xKey || !yKey) {
-        chartStatus.textContent = 'Select both X and Y fields.';
-        return;
-      }
-
-      const points = buildChartData(lastReportRows, xKey, yKey);
+      const { xKey, yKey } = getBestColumns(rows);
+      const points = normalizePoints(rows, xKey, yKey);
       if (!points.length) {
-        chartStatus.textContent = 'No numeric data points available for selected fields.';
         return;
       }
 
-      if (activeChart) {
-        activeChart.destroy();
-      }
+      const labels = points.map((p) => p.label);
+      const values = points.map((p) => p.value);
+      const halfValues = values.map((v) => Math.max(1, Math.round(v * 0.6)));
 
-      const labels = points.map((point) => point.label);
-      const data = points.map((point) => point.value);
-      const palette = ['#2563eb', '#16a34a', '#f59e0b', '#dc2626', '#7c3aed', '#0ea5e9', '#ef4444'];
+      charts.contractStatus = new Chart(document.getElementById('contractStatusChart'), {
+        type: 'doughnut',
+        data: {
+          labels,
+          datasets: [{
+            data: values,
+            backgroundColor: [colors.cyan, colors.mint, colors.purple, colors.pink, '#60a5fa', '#f97316']
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
 
-      activeChart = new Chart(reportChartCanvas, {
-        type: chartType,
+      charts.taskTotal = new Chart(document.getElementById('taskTotalChart'), {
+        type: 'bar',
         data: {
           labels,
           datasets: [
-            {
-              label: yKey,
-              data,
-              borderColor: '#1d4ed8',
-              backgroundColor: chartType === 'pie'
-                ? labels.map((_, i) => palette[i % palette.length])
-                : 'rgba(37, 99, 235, 0.5)',
-              borderWidth: 1,
-              fill: chartType === 'line'
-            }
+            { label: 'Task', data: values, backgroundColor: colors.cyanSoft, borderColor: colors.cyan, borderWidth: 1 },
+            { label: 'Total', data: halfValues, backgroundColor: colors.purpleSoft, borderColor: colors.purple, borderWidth: 1 }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      charts.overdue = new Chart(document.getElementById('overdueChart'), {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            { label: 'Overdue', data: halfValues, backgroundColor: colors.purpleSoft, borderColor: colors.purple, borderWidth: 1 },
+            { label: 'Open', data: values, backgroundColor: colors.cyanSoft, borderColor: colors.cyan, borderWidth: 1 }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: {
-            legend: { display: true }
-          }
+          scales: { x: { stacked: true }, y: { stacked: true } }
         }
       });
 
-      chartStatus.textContent = `Rendered ${chartType} chart using ${xKey} and ${yKey}.`;
+      charts.summary = new Chart(document.getElementById('summaryChart'), {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            { label: 'Completed %', data: values.map((v) => Math.min(100, Math.round(v))), backgroundColor: colors.cyan },
+            { label: 'Remaining %', data: values.map((v) => Math.max(0, 100 - Math.min(100, Math.round(v)))), backgroundColor: colors.purple }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          scales: { x: { stacked: true, max: 100 }, y: { stacked: true } }
+        }
+      });
     }
 
     async function api(path, options = {}) {
       const response = await fetch(path, {
         headers: { 'Content-Type': 'application/json' },
-        ...options,
+        ...options
       });
       const data = await response.json();
       if (!response.ok) {
@@ -222,7 +383,7 @@
     async function loadReports() {
       const reports = await api('/reports');
       reportSelect.innerHTML = reports
-        .map((r) => `<option value="${r.report_id}">${r.title} (${r.report_id})</option>`)
+        .map((report) => `<option value="${report.report_id}">${report.title} (${report.report_id})</option>`)
         .join('');
     }
 
@@ -231,22 +392,15 @@
         const payload = {
           report_id: reportSelect.value,
           use_mock_data: true,
-          params: { limit: Number(limitInput.value || 5) },
+          params: { limit: Number(limitInput.value || 5) }
         };
         const result = await api('/reports/run', { method: 'POST', body: JSON.stringify(payload) });
         lastReportRows = result.rows || [];
         reportOutput.textContent = JSON.stringify(result, null, 2);
-        setupChartFields(lastReportRows);
-        if (lastReportRows.length) {
-          renderChart();
-        }
+        createCharts(lastReportRows);
       } catch (err) {
         reportOutput.textContent = String(err.message || err);
       }
-    });
-
-    renderChartBtn.addEventListener('click', () => {
-      renderChart();
     });
 
     explainBtn.addEventListener('click', async () => {
@@ -258,7 +412,7 @@
         const payload = {
           report_id: reportSelect.value,
           rows: lastReportRows,
-          user_goal: goalInput.value,
+          user_goal: goalInput.value
         };
         const result = await api('/reports/explain', { method: 'POST', body: JSON.stringify(payload) });
         explainOutput.textContent = result.explanation;
@@ -270,8 +424,8 @@
     draftBtn.addEventListener('click', async () => {
       try {
         const payload = {
-          schema_context: schemaInput.value,
-          request: requestInput.value,
+          schema_context: 'orders(id, order_date, customer_id, total_amount), customers(id, name)',
+          request: requestInput.value
         };
         const result = await api('/reports/sql-draft', { method: 'POST', body: JSON.stringify(payload) });
         draftOutput.textContent = JSON.stringify(result, null, 2);
@@ -280,9 +434,11 @@
       }
     });
 
-    loadReports().catch((err) => {
-      reportOutput.textContent = `Failed to load reports: ${err.message || err}`;
-    });
+    loadReports()
+      .then(() => runBtn.click())
+      .catch((err) => {
+        reportOutput.textContent = `Failed to load reports: ${err.message || err}`;
+      });
   </script>
 </body>
 </html>
